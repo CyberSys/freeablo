@@ -84,10 +84,10 @@ namespace FAAudio
 
     void AudioManager::playMusic(const std::string& path)
     {
-        if (mCurrentMusic != NULL)
-            Audio::freeMusic(mCurrentMusic);
+//        if (mCurrentMusic != NULL)
+//            Audio::freeMusic(mCurrentMusic);
 
-        mCurrentMusic = Audio::loadMusic(path);
-        Audio::playMusic(mCurrentMusic);
+//        mCurrentMusic = Audio::loadMusic(path);
+//        Audio::playMusic(mCurrentMusic);
     }
 }

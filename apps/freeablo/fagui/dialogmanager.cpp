@@ -8,6 +8,9 @@
 #include "guimanager.h"
 #include <misc/assert.h>
 #include <utility>
+#include "nkhelpers.h"
+#include "mouseandclickmenu.h"
+#include "characterdialoguepopup.h"
 
 namespace FAGui
 {
@@ -183,6 +186,8 @@ namespace FAGui
     void DialogData::clearLines() { mLines.clear(); }
 
     DialogManager::DialogManager(GuiManager& gui_manager, FAWorld::World& world) : mGuiManager(gui_manager), mWorld(world) {}
+
+    DialogManager::~DialogManager() = default;
 
     void DialogManager::talkOgden(const FAWorld::Actor* npc)
     {
@@ -455,11 +460,53 @@ namespace FAGui
         mGuiManager.pushDialogData(std::move(d));
     }
 
+    void DialogManager::buyDialog2(const FAWorld::Actor* shopkeeper, std::vector<FAWorld::StoreItem>& items)
+    {
+//        DialogData d;
+//        d.widen();
+//        int32_t cnt = 0;
+//        auto& inventory = mWorld.getCurrentPlayer()->mInventory;
+
+//        d.header({(boost::format("%2%           Your gold : %1%") % inventory.getTotalGold() % "I have these items for sale :").str()});
+
+//        for (auto it = items.begin(); it != items.end(); ++it)
+//        {
+//            auto& item = *it;
+//            auto price = item.getPrice();
+//            auto header = d.getHeader();
+//            d.textLines(item.descriptionForMerchants(), TextColor::white, false, {20, 40, 40})
+//                .setAction([this, price, header, it, &items, &inventory, shopkeeper]() mutable {
+//                    if (inventory.getTotalGold() < price)
+//                        return fillMessageDialog(header, "You do not have enough gold");
+
+//                    if (!inventory.getInv(FAWorld::EquipTargetType::inventory).canFitItem(*it))
+//                        return fillMessageDialog(header, "You do not have enough room in inventory");
+
+//                    confirmDialog(header, *it, price, "Are you sure you want to buy this item?", [this, price, it, &inventory, &items, shopkeeper]() {
+//                        inventory.takeOutGold(price);
+//                        inventory.autoPlaceItem(*it);
+//                        items.erase(it);
+//                        auto recreate = [this, &items, shopkeeper] { buyDialog(shopkeeper, items); };
+//                        mGuiManager.popDialogData();
+//                        recreate();
+//                    });
+//                })
+//                .setNumber(price);
+//            ++cnt;
+//        }
+//        d.footer({"Back"}).setAction([&]() { mGuiManager.popDialogData(); }).setForceSelected(items.empty());
+//        d.showScrollBar();
+//        mGuiManager.pushDialogData(std::move(d));
+    }
+
     static bool griswoldSellFilter(const FAWorld::Item& item)
     {
         // TODO: add check for quest items
         return item.getType() != FAWorld::ItemType::misc && item.getType() != FAWorld::ItemType::gold && item.getType() != FAWorld::ItemType::staff;
     }
+
+
+
 
     void DialogManager::talkGriswold(const FAWorld::Actor* npc)
     {
@@ -474,8 +521,45 @@ namespace FAGui
         d.textLines({td.at("sell")}).setAction([&] { sellDialog(griswoldSellFilter); });
         d.textLines({td.at("repair")}).setAction([]() {});
         d.textLines({td.at("quit")}).setAction([&]() { quitDialog(); });
-        mGuiManager.pushDialogData(std::move(d));
+//        mGuiManager.pushDialogData(std::move(d));
+
+
+        auto dialog = new CharacterDialoguePopup(mGuiManager);
+
+        dialog->mIntroduction = {td.at("introductionHeader1"), td.at("introductionHeader2")};
+
+        dialog->addMenuOption({td.at("talk")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("buyBasic"), "ASSFSJDHHG"}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("buyPremium")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("sell")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("quit")}, []() { return CharacterDialoguePopup::UpdateResult::PopDialog; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+        dialog->addMenuOption({td.at("repair")}, []() { return CharacterDialoguePopup::UpdateResult::DoNothing; });
+
+
+        mDialogStack.emplace_back(dialog);
     }
 
     void DialogManager::quitDialog() const { mGuiManager.popDialogData(); }
+
+    void DialogManager::update(struct nk_context* ctx)
+    {
+        if (!mDialogStack.empty())
+        {
+            CharacterDialoguePopup::UpdateResult result = mDialogStack[mDialogStack.size()-1]->update(ctx);
+            if (result == CharacterDialoguePopup::UpdateResult::PopDialog)
+                mDialogStack.pop_back();
+        }
+    }
 }

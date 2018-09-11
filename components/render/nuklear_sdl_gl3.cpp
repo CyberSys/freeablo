@@ -176,6 +176,8 @@ void nk_sdl_device_destroy(nk_gl_device& dev)
     nk_buffer_free(&dev.cmds);
 }
 
+struct nk_image tmp;
+
 void nk_sdl_render_dump(Render::SpriteCacheBase* cache, NuklearFrameDump& dump, SDL_Window* win)
 {
     int width, height;
@@ -242,15 +244,24 @@ void nk_sdl_render_dump(Render::SpriteCacheBase* cache, NuklearFrameDump& dump, 
             if (!cmd.elem_count)
                 continue;
 
-            uint32_t cacheIndex = ((uint32_t*)cmd.texture.ptr)[0];
-            uint32_t frameNum = ((uint32_t*)cmd.texture.ptr)[1];
+            int32_t w=0, h=0;
             auto effect = static_cast<FAGui::EffectType>(cmd.userdata.id);
+
+            void* tex = cmd.texture.ptr;
+            if (!cmd.texture.ptr)
+            {
+                tex = dev.null.texture.ptr;
+            }
+
+            uint32_t cacheIndex = ((uint32_t*)tex)[0];
+            uint32_t frameNum = ((uint32_t*)tex)[1];
 
             Render::SpriteGroup* sprite = cache->get(cacheIndex);
             auto s = sprite->operator[](frameNum);
             glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)s);
-            int32_t w, h;
             Render::spriteSize(s, w, h);
+
+
             int item_hl_color[] = {0xB9, 0xAA, 0x77};
             glUniform1f(dev.uniform_hcolor_r, item_hl_color[0] / 255.f);
             glUniform1f(dev.uniform_hcolor_g, item_hl_color[1] / 255.f);

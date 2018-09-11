@@ -18,6 +18,8 @@
 #include <misc/vec2fix.h>
 #include <random/random.h>
 #include <string>
+#include "../engine/enginemain.h"
+#include "../fagui/guimanager.h"
 
 namespace FAWorld
 {

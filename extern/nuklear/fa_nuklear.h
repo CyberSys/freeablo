@@ -17,4 +17,7 @@
     #include <stdarg.h>
     #include "nuklear.h"
 
+ void
+nk_layout_peek(struct nk_rect *bounds, struct nk_context *ctx);
+
 #endif
